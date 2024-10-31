@@ -17,7 +17,9 @@ struct List
 ErrEnum listCtor(List* list);
 void listDtor(List* list);
 ErrEnum listVerify(List* list);
-void listDump(FILE* fout, List* list);
+
+ErrEnum listMakeGraph(List* list);
+ErrEnum listDump(List* list);
 
 ErrEnum listGetFront(List* list, ListElem** elem);
 ErrEnum listGetBack(List* list, ListElem** elem);

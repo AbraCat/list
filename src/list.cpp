@@ -2,7 +2,9 @@
 
 #include <list.h>
 
-const int max_elems = 10, poison_val = 44203;
+const char log_path[] = "./log";
+const int max_elems = 10, poison_val = 44203, buffer_size = 500;
+int dump_cnt = 0;
 
 ErrEnum listCtor(List* list)
 {
@@ -28,28 +30,12 @@ void listDtor(List* list)
     free(list->data);
     free(list->next);
 }
+
 ErrEnum listVerify(List* list)
 {
     if (list == NULL) return ERR_OK; // not ok
 
     return ERR_OK;
-}
-void listDump(FILE* fout, List* list)
-{
-    if (fout == NULL || list == NULL) return;
-
-    fprintf(fout, "List [0x%p]\n\nfree: %d\n", list, list->free);
-
-    fprintf(fout, "\ndata [0x%p]: ", list->data);
-    for (int i = 0; i < max_elems; ++i)
-        fprintf(fout, "%d ", list->data[i]);
-    fprintf(fout, "\nnext [0x%p]: ", list->next);
-    for (int i = 0; i < max_elems; ++i)
-        fprintf(fout, "%d ", list->next[i]);
-    fprintf(fout, "\nprev [0x%p]: ", list->prev);
-    for (int i = 0; i < max_elems; ++i)
-        fprintf(fout, "%d ", list->prev[i]);
-    fputs("\n\n", fout);
 }
 
 ErrEnum listGetFront(List* list, ListElem** elem)
@@ -227,5 +213,96 @@ ErrEnum listByIndex(List* list, int ind, ListElem** ans)
         }
     }
     *ans = list->data + i;
+    return ERR_OK;
+}
+
+ErrEnum listMakeGraph(List* list)
+{
+    if (list == NULL) return ERR_OK; //
+
+    char buf[buffer_size] = "";
+
+    sprintf(buf, "type NUL > %s/dot-src/dot-src-%d.txt", log_path, dump_cnt);
+    system(buf);
+    sprintf(buf, "%s/dot-src/dot-src-%d.txt", log_path, dump_cnt);
+    FILE* fout = fopen(buf, "w");
+    if (fout == NULL) return ERR_OPEN_FILE;
+
+
+
+    fputs("digraph List\n{\nrankdir=LR\n", fout);
+    fprintf(fout, "free [shape=Mrecord,label=\"free|<next>%d\"]\n\n", list->free);
+
+    for (int i = 0; i < max_elems; ++i)
+        fprintf(fout, "elem%d [shape=Mrecord,label=\"elem%d|<val>%d|<next>%d|%d\"]\n", 
+        i, i, list->data[i], list->next[i], list->prev[i]);
+    
+    for (int i = 0; i < max_elems - 1; ++i)
+        fprintf(fout, "elem%d->elem%d[weight=1000,color=\"#00000000\"]\n", i, i + 1);
+
+    int i = 0;
+    do
+    {
+        fprintf(fout, "elem%d:<next>->elem%d:<next>\n", i, list->next[i]);
+        i = list->next[i];
+    } while (i != 0);
+
+    if (list->free != 0)
+    {
+        fprintf(fout, "free->elem%d:<next>\n", list->free);
+        i = list->free;
+        while (list->next[i] != 0)
+        {
+            fprintf(fout, "elem%d:<next>->elem%d:<next>\n", i, list->next[i]);
+            i = list->next[i];
+        }
+    }
+
+    fputs("}\n", fout);
+
+    fclose(fout);
+
+
+
+    sprintf(buf, "dot %s/dot-src/dot-src-%d.txt -Tpng -o%s/dot-img/dot-img-%d.png", 
+    log_path, dump_cnt, log_path, dump_cnt);
+    system(buf);
+
+    return ERR_OK;
+}
+
+ErrEnum listDump(List* list)
+{
+    if (list == NULL) return ERR_OK; //
+
+    char buf[buffer_size] = "";
+
+    sprintf(buf, "type NUL > %s/dump/dump-%d.html", log_path, dump_cnt);
+    system(buf);
+    sprintf(buf, "%s/dump/dump-%d.html", log_path, dump_cnt);
+    FILE* fout = fopen(buf, "w");
+    if (fout == NULL) return ERR_OPEN_FILE;
+
+    fprintf(fout, "<pre>\n\nList [0x%p]\n\nfree: %d\n", list, list->free);
+
+    fprintf(fout, "\ndata [0x%p]: ", list->data);
+    for (int i = 0; i < max_elems; ++i)
+        fprintf(fout, "%d ", list->data[i]);
+    fprintf(fout, "\nnext [0x%p]: ", list->next);
+    for (int i = 0; i < max_elems; ++i)
+        fprintf(fout, "%d ", list->next[i]);
+    fprintf(fout, "\nprev [0x%p]: ", list->prev);
+    for (int i = 0; i < max_elems; ++i)
+        fprintf(fout, "%d ", list->prev[i]);
+
+    sprintf(buf, "../dot-img/dot-img-%d.png", dump_cnt);
+    fprintf(fout, "\n\n<img src=\"%s\" alt=\"graph image\"/>", buf);
+
+    fclose(fout);
+
+
+
+    listMakeGraph(list);
+    ++dump_cnt;
     return ERR_OK;
 }

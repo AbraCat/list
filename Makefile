@@ -1,4 +1,4 @@
-.PHONY: all clean run
+.PHONY: all clean run clean_log
 
 all: exe/main.exe
 
@@ -15,6 +15,13 @@ clean:
 	@mkdir d
 	@mkdir o
 	@mkdir exe
+
+clean_log:
+	@rmdir log /s /q
+	@mkdir log
+	@mkdir log\dot-src
+	@mkdir log\dot-img
+	@mkdir log\dump
 
 CC:= gcc
 
