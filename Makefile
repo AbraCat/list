@@ -1,4 +1,4 @@
-.PHONY: all clean run runt
+.PHONY: all clean run
 
 all: exe/main.exe
 

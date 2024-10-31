@@ -11,7 +11,7 @@ struct List
 {
     ListElem *data;
     int *next, *prev;
-    int head, tail, free;
+    int free;
 };
 
 ErrEnum listCtor(List* list);
