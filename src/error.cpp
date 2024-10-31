@@ -4,10 +4,20 @@
 #include <error.h>
 #include <colors.h>
 
-const int n_errs = 2;
+const int n_errs = 10;
 ErrDescr err_arr[] = {{ERR_OK, "No error"}, 
 
-{ERR_MEM, "Couldn't allocate memory"}};
+{ERR_NULL_LIST, "NULL list pointer"},
+{ERR_INVAL_LIST_ELEM, "Invalid list element pointer"},
+{ERR_FREE_LIST_ELEM, "Invalid list element pointer"},
+{ERR_LIST_BOUND, "Out of list bounds"},
+{ERR_LIST_OVERFLOW, "List overflow"},
+{ERR_LIST_INDEX_BOUND, "List index out of bound"},
+
+{ERR_MEM, "Couldn't allocate memory"},
+{ERR_OPEN_FILE, "Couldn't open file"},
+
+{ERR_NULL_ARG, "NULL function argument"}};
 
 void myAssertFn(int expr, const char* str_expr, const char* file, int line, const char* function)
 {

@@ -23,9 +23,17 @@ enum ErrEnum
 {
     ERR_OK = 0,
 
-    ERR_MEM,
+    ERR_NULL_LIST,
+    ERR_INVAL_LIST_ELEM,
+    ERR_FREE_LIST_ELEM,
+    ERR_LIST_BOUND,
+    ERR_LIST_OVERFLOW,
+    ERR_LIST_INDEX_BOUND,
 
+    ERR_MEM,
     ERR_OPEN_FILE,
+
+    ERR_NULL_ARG,
 };
 
 struct ErrDescr

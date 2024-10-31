@@ -10,12 +10,12 @@
 int main(int argc, const char* argv[])
 {
     List list = {};
-    listCtor(&list);
+    handleErr(listCtor(&list));
 
     for (int i = 0; i < 5; ++i)
-        listPushBack(&list, (i + 1) * 10);
+        handleErr(listPushBack(&list, (i + 1) * 10));
 
-    handleErr(listDump(&list));
+    // handleErr(listDump(&list));
 
     listDtor(&list);
     return 0;

@@ -2,7 +2,7 @@
 
 #include <list.h>
 
-const char log_path[] = "./log";
+const char log_path[] = "./log"; // relative to directory where exe runs
 const int max_elems = 10, poison_val = 44203, buffer_size = 500;
 int dump_cnt = 0;
 
@@ -33,14 +33,16 @@ void listDtor(List* list)
 
 ErrEnum listVerify(List* list)
 {
-    if (list == NULL) return ERR_OK; // not ok
+    if (list == NULL) return ERR_NULL_LIST;
 
     return ERR_OK;
 }
 
 ErrEnum listGetFront(List* list, ListElem** elem)
 {
-    if (list == NULL || elem == NULL) return ERR_OK; //
+    if (elem == NULL) return ERR_NULL_ARG;
+    if (list == NULL) return ERR_NULL_LIST;
+
     if (list->next[0] == 0)
     {
         *elem = NULL;
@@ -52,7 +54,9 @@ ErrEnum listGetFront(List* list, ListElem** elem)
 
 ErrEnum listGetBack(List* list, ListElem** elem)
 {
-    if (list == NULL || elem == NULL) return ERR_OK; //
+    if (elem == NULL) return ERR_NULL_ARG;
+    if (list == NULL) return ERR_NULL_LIST;
+
     if (list->prev[0] == 0)
     {
         *elem = NULL;
@@ -64,32 +68,36 @@ ErrEnum listGetBack(List* list, ListElem** elem)
 
 ErrEnum listNext(List* list, ListElem* elem, ListElem** ans)
 {
-    if (list == NULL || elem == NULL || ans == 0) return ERR_OK; //
+    if (list == NULL) return ERR_NULL_LIST;
+    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
+    if (ans == NULL) return ERR_NULL_ARG;
 
     int i = elem - list->data;
-    if (i <= 0 || i >= max_elems) return ERR_OK; //
+    if (i <= 0 || i >= max_elems) return ERR_INVAL_LIST_ELEM;
 
-    if (list->data[i] == poison_val) return ERR_OK; //
+    if (list->data[i] == poison_val) return ERR_FREE_LIST_ELEM;
     if (list->next[i] == 0)
     {
         *ans = NULL;
-        return ERR_OK; //
+        return ERR_LIST_BOUND;
     }
     *ans = list->data + list->next[i];
     return ERR_OK;
 }
 ErrEnum listPrev(List* list, ListElem* elem, ListElem** ans)
 {
-    if (list == NULL || elem == NULL || ans == 0) return ERR_OK; //
+    if (list == NULL) return ERR_NULL_LIST;
+    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
+    if (ans == NULL) return ERR_NULL_ARG;
 
     int i = elem - list->data;
-    if (i <= 0 || i >= max_elems) return ERR_OK; //
+    if (i <= 0 || i >= max_elems) return ERR_INVAL_LIST_ELEM;
 
-    if (list->data[i] == poison_val) return ERR_OK; //
+    if (list->data[i] == poison_val) return ERR_FREE_LIST_ELEM;
     if (list->prev[i] == 0)
     {
         *ans = NULL;
-        return ERR_OK; //
+        return ERR_LIST_BOUND;
     }
     *ans = list->data + list->prev[i];
     return ERR_OK;
@@ -97,28 +105,28 @@ ErrEnum listPrev(List* list, ListElem* elem, ListElem** ans)
 
 ErrEnum listPushFront(List* list, ListElem val)
 {
-    // err check
-
+    if (list == NULL) return ERR_NULL_LIST;
     return listInsertBefore(list, list->data + list->next[0], val);
 }
 
 ErrEnum listPushBack(List* list, ListElem val)
 {
-    // err check
-
+    if (list == NULL) return ERR_NULL_LIST;
     return listInsertAfter(list, list->data + list->prev[0], val);
 }
 
 ErrEnum listPopFront(List* list, ListElem* val)
 {
-    // err check
+    if (list == NULL) return ERR_NULL_LIST;
+
     if (list->next[0] == 0) return ERR_OK; //
     if (val != NULL) *val = list->data[list->next[0]];
     return listErase(list, list->data + list->next[0]);
 }
 ErrEnum listPopBack(List* list, ListElem* val)
 {
-    // err check
+    if (list == NULL) return ERR_NULL_LIST;
+
     if (list->prev[0] == 0) return ERR_OK; //
     if (val != NULL) *val = list->data[list->prev[0]];
     return listErase(list, list->data + list->prev[0]);
@@ -126,12 +134,13 @@ ErrEnum listPopBack(List* list, ListElem* val)
 
 ErrEnum listInsertBefore(List* list, ListElem* elem, ListElem val)
 {
-    // err check
-    if (list->free == 0) return ERR_OK; //
+    if (list == NULL) return ERR_NULL_LIST;
+    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
+    if (list->free == 0) return ERR_LIST_OVERFLOW;
 
     int elem_ind = elem - list->data;
-    if (elem_ind < 0 || elem_ind >= max_elems) return ERR_OK;
-    if (list->data[elem_ind] == poison_val) return ERR_OK; //
+    if (elem_ind < 0 || elem_ind >= max_elems) return ERR_INVAL_LIST_ELEM;
+    if (list->data[elem_ind] == poison_val) return ERR_FREE_LIST_ELEM;
     int new_free = list->next[list->free];
 
     list->data[list->free] = val;
@@ -146,12 +155,13 @@ ErrEnum listInsertBefore(List* list, ListElem* elem, ListElem val)
 
 ErrEnum listInsertAfter(List* list, ListElem* elem, ListElem val)
 {
-    // err check
-    if (list->free == 0) return ERR_OK; //
+    if (list == NULL) return ERR_NULL_LIST;
+    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
+    if (list->free == 0) return ERR_LIST_OVERFLOW;
 
     int elem_ind = elem - list->data;
-    if (elem_ind < 0 || elem_ind >= max_elems) return ERR_OK;
-    if (list->data[elem_ind] == poison_val) return ERR_OK; //
+    if (elem_ind < 0 || elem_ind >= max_elems) return ERR_INVAL_LIST_ELEM;
+    if (list->data[elem_ind] == poison_val) return ERR_FREE_LIST_ELEM;
     int new_free = list->next[list->free];
 
     list->data[list->free] = val;
@@ -166,7 +176,8 @@ ErrEnum listInsertAfter(List* list, ListElem* elem, ListElem val)
 
 ErrEnum listErase(List* list, ListElem* elem)
 {
-    // err check
+    if (list == NULL) return ERR_NULL_LIST;
+    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
     
     int elem_ind = elem - list->data;
     if (elem_ind <= 0 || elem_ind >= max_elems) return ERR_OK;
@@ -184,7 +195,8 @@ ErrEnum listErase(List* list, ListElem* elem)
 
 ErrEnum listByVal(List* list, ListElem val, ListElem** ans)
 {
-    // err check
+    if (list == NULL) return ERR_NULL_LIST;
+    if (ans == NULL) return ERR_NULL_ARG;
 
     for (int i = list->next[0]; i != 0; i = list->next[i])
     {
@@ -200,7 +212,9 @@ ErrEnum listByVal(List* list, ListElem val, ListElem** ans)
 
 ErrEnum listByIndex(List* list, int ind, ListElem** ans)
 {
-    // err check (in particular, ind < 0)
+    if (list == NULL) return ERR_NULL_LIST;
+    if (ans == NULL) return ERR_NULL_ARG;
+    if (ind < 0 || ind >= max_elems) return ERR_LIST_INDEX_BOUND; // ind >= max_elems - 1
 
     int i = 0;
     for (int cnt = 0; cnt <= ind; ++cnt)
@@ -209,7 +223,7 @@ ErrEnum listByIndex(List* list, int ind, ListElem** ans)
         if (i == 0)
         {
             *ans = NULL;
-            return ERR_OK; // index out of bound
+            return ERR_LIST_INDEX_BOUND;
         }
     }
     *ans = list->data + i;
@@ -218,7 +232,7 @@ ErrEnum listByIndex(List* list, int ind, ListElem** ans)
 
 ErrEnum listMakeGraph(List* list)
 {
-    if (list == NULL) return ERR_OK; //
+    if (list == NULL) return ERR_NULL_LIST;
 
     char buf[buffer_size] = "";
 
@@ -273,7 +287,7 @@ ErrEnum listMakeGraph(List* list)
 
 ErrEnum listDump(List* list)
 {
-    if (list == NULL) return ERR_OK; //
+    if (list == NULL) return ERR_NULL_LIST;
 
     char buf[buffer_size] = "";
 
