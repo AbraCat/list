@@ -32,11 +32,10 @@ enum ErrEnum
     ERR_LIST_CYCLE,
     ERR_FREE_CYCLE,
     ERR_INVAL_PREV,
+    ERR_EMPTY_LIST,
 
     ERR_MEM,
     ERR_OPEN_FILE,
-
-    ERR_NULL_ARG,
 };
 
 struct ErrDescr

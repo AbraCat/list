@@ -22,6 +22,8 @@ ErrEnum listCtor(List* list)
     }
     list->next[0] = list->prev[0] = 0;
 
+    list->fdump = NULL;
+
     return ERR_OK;
 }
 
@@ -29,6 +31,7 @@ void listDtor(List* list)
 {
     free(list->data);
     free(list->next);
+    if (list->fdump != NULL) fclose(list->fdump);
 }
 
 ErrEnum listVerify(List* list)
@@ -59,13 +62,12 @@ ErrEnum listVerify(List* list)
 
 ErrEnum listGetFront(List* list, ListElem** elem)
 {
-    if (elem == NULL) return ERR_NULL_ARG;
-    if (list == NULL) return ERR_NULL_LIST;
+    myAssert(list != NULL && elem != NULL);
 
     if (list->next[0] == 0)
     {
         *elem = NULL;
-        return ERR_OK; //
+        return ERR_EMPTY_LIST;
     }
     *elem = list->data + list->next[0];
     return ERR_OK;
@@ -73,13 +75,12 @@ ErrEnum listGetFront(List* list, ListElem** elem)
 
 ErrEnum listGetBack(List* list, ListElem** elem)
 {
-    if (elem == NULL) return ERR_NULL_ARG;
-    if (list == NULL) return ERR_NULL_LIST;
+    myAssert(list != NULL && elem != NULL);
 
     if (list->prev[0] == 0)
     {
         *elem = NULL;
-        return ERR_OK; //
+        return ERR_EMPTY_LIST;
     }
     *elem = list->data + list->prev[0];
     return ERR_OK;
@@ -87,9 +88,7 @@ ErrEnum listGetBack(List* list, ListElem** elem)
 
 ErrEnum listNext(List* list, ListElem* elem, ListElem** ans)
 {
-    if (list == NULL) return ERR_NULL_LIST;
-    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
-    if (ans == NULL) return ERR_NULL_ARG;
+    myAssert(list != NULL && elem != NULL && ans != NULL);
 
     int i = elem - list->data;
     if (i <= 0 || i >= max_elems) return ERR_INVAL_LIST_ELEM;
@@ -105,9 +104,7 @@ ErrEnum listNext(List* list, ListElem* elem, ListElem** ans)
 }
 ErrEnum listPrev(List* list, ListElem* elem, ListElem** ans)
 {
-    if (list == NULL) return ERR_NULL_LIST;
-    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
-    if (ans == NULL) return ERR_NULL_ARG;
+    myAssert(list != NULL && elem != NULL && ans != NULL);
 
     int i = elem - list->data;
     if (i <= 0 || i >= max_elems) return ERR_INVAL_LIST_ELEM;
@@ -124,21 +121,21 @@ ErrEnum listPrev(List* list, ListElem* elem, ListElem** ans)
 
 ErrEnum listPushFront(List* list, ListElem val)
 {
-    if (list == NULL) return ERR_NULL_LIST;
+    myAssert(list != NULL);
     return listInsertBefore(list, list->data + list->next[0], val);
 }
 
 ErrEnum listPushBack(List* list, ListElem val)
 {
-    if (list == NULL) return ERR_NULL_LIST;
+    myAssert(list != NULL);
     return listInsertAfter(list, list->data + list->prev[0], val);
 }
 
 ErrEnum listPopFront(List* list, ListElem* val)
 {
-    if (list == NULL) return ERR_NULL_LIST;
+    myAssert(list != NULL);
 
-    if (list->next[0] == 0) return ERR_OK; //
+    if (list->next[0] == 0) return ERR_EMPTY_LIST;
     if (val != NULL) *val = list->data[list->next[0]];
     return listErase(list, list->data + list->next[0]);
 }
@@ -146,15 +143,14 @@ ErrEnum listPopBack(List* list, ListElem* val)
 {
     if (list == NULL) return ERR_NULL_LIST;
 
-    if (list->prev[0] == 0) return ERR_OK; //
+    if (list->prev[0] == 0) return ERR_EMPTY_LIST;
     if (val != NULL) *val = list->data[list->prev[0]];
     return listErase(list, list->data + list->prev[0]);
 }
 
 ErrEnum listInsertBefore(List* list, ListElem* elem, ListElem val)
 {
-    if (list == NULL) return ERR_NULL_LIST;
-    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
+    myAssert(list != NULL && elem != NULL);
     if (list->free == 0) return ERR_LIST_OVERFLOW;
 
     int elem_ind = elem - list->data;
@@ -174,8 +170,7 @@ ErrEnum listInsertBefore(List* list, ListElem* elem, ListElem val)
 
 ErrEnum listInsertAfter(List* list, ListElem* elem, ListElem val)
 {
-    if (list == NULL) return ERR_NULL_LIST;
-    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
+    myAssert(list != NULL && elem != NULL);
     if (list->free == 0) return ERR_LIST_OVERFLOW;
 
     int elem_ind = elem - list->data;
@@ -195,12 +190,11 @@ ErrEnum listInsertAfter(List* list, ListElem* elem, ListElem val)
 
 ErrEnum listErase(List* list, ListElem* elem)
 {
-    if (list == NULL) return ERR_NULL_LIST;
-    if (elem == NULL) return ERR_INVAL_LIST_ELEM;
+    myAssert(list != NULL && elem != NULL);
     
     int elem_ind = elem - list->data;
-    if (elem_ind <= 0 || elem_ind >= max_elems) return ERR_OK;
-    if (list->data[elem_ind] == poison_val) return ERR_OK; //
+    if (elem_ind <= 0 || elem_ind >= max_elems) return ERR_INVAL_LIST_ELEM;
+    if (list->data[elem_ind] == poison_val) return ERR_FREE_LIST_ELEM;
 
     list->data[elem_ind] = poison_val;
     list->next[list->prev[elem_ind]] = list->next[elem_ind];
@@ -214,8 +208,7 @@ ErrEnum listErase(List* list, ListElem* elem)
 
 ErrEnum listByVal(List* list, ListElem val, ListElem** ans)
 {
-    if (list == NULL) return ERR_NULL_LIST;
-    if (ans == NULL) return ERR_NULL_ARG;
+    myAssert(list != NULL && ans != NULL);
 
     for (int i = list->next[0]; i != 0; i = list->next[i])
     {
@@ -231,8 +224,7 @@ ErrEnum listByVal(List* list, ListElem val, ListElem** ans)
 
 ErrEnum listByIndex(List* list, int ind, ListElem** ans)
 {
-    if (list == NULL) return ERR_NULL_LIST;
-    if (ans == NULL) return ERR_NULL_ARG;
+    myAssert(list != NULL && ans != NULL);
     if (ind < 0 || ind >= max_elems) return ERR_LIST_INDEX_BOUND; // ind >= max_elems - 1
 
     int i = 0;
@@ -251,17 +243,20 @@ ErrEnum listByIndex(List* list, int ind, ListElem** ans)
 
 ErrEnum listMakeGraph(List* list)
 {
-    if (list == NULL) return ERR_NULL_LIST;
+    myAssert(list != NULL);
 
+    static int first_call = 1;
     char buf[buffer_size] = "";
+    if (first_call)
+    {
+        first_call = 0;
+        sprintf(buf, "type NUL > %s/dot-src/dot-src.txt", log_path);
+        system(buf);
+    }
 
-    sprintf(buf, "type NUL > %s/dot-src/dot-src-%d.txt", log_path, dump_cnt);
-    system(buf);
-    sprintf(buf, "%s/dot-src/dot-src-%d.txt", log_path, dump_cnt);
-    FILE* fout = fopen(buf, "w");
+    sprintf(buf, "%s/dot-src/dot-src.txt", log_path);
+    FILE *fout = fopen(buf, "w");
     if (fout == NULL) return ERR_OPEN_FILE;
-
-
 
     fputs("digraph List\n{\nrankdir=LR\n", fout);
     fprintf(fout, "free [shape=Mrecord,label=\"free|<next>%d\"]\n\n", list->free);
@@ -296,9 +291,8 @@ ErrEnum listMakeGraph(List* list)
     fclose(fout);
 
 
-
-    sprintf(buf, "dot %s/dot-src/dot-src-%d.txt -Tpng -o%s/dot-img/dot-img-%d.png", 
-    log_path, dump_cnt, log_path, dump_cnt);
+    sprintf(buf, "dot %s/dot-src/dot-src.txt -Tpng -o%s/dot-img/dot-img-%d.png", 
+    log_path, log_path, dump_cnt);
     system(buf);
 
     return ERR_OK;
@@ -306,15 +300,21 @@ ErrEnum listMakeGraph(List* list)
 
 ErrEnum listDump(List* list)
 {
-    if (list == NULL) return ERR_NULL_LIST;
+    myAssert(list != NULL);
 
+    static int first_call = 1;
     char buf[buffer_size] = "";
+    if (first_call)
+    {
+        first_call = 0;
+        sprintf(buf, "type NUL > %s/dump/dump.html", log_path);
+        system(buf);
+        sprintf(buf, "%s/dump/dump.html", log_path);
+        list->fdump = fopen(buf, "w");
+        if (list->fdump == NULL) return ERR_OPEN_FILE;
+    }
 
-    sprintf(buf, "type NUL > %s/dump/dump-%d.html", log_path, dump_cnt);
-    system(buf);
-    sprintf(buf, "%s/dump/dump-%d.html", log_path, dump_cnt);
-    FILE* fout = fopen(buf, "w");
-    if (fout == NULL) return ERR_OPEN_FILE;
+    FILE *fout = list->fdump;
 
     fprintf(fout, "<pre>\n\nList [0x%p]\n\nfree: %d\n", list, list->free);
 
@@ -329,10 +329,7 @@ ErrEnum listDump(List* list)
         fprintf(fout, "%d ", list->prev[i]);
 
     sprintf(buf, "../dot-img/dot-img-%d.png", dump_cnt);
-    fprintf(fout, "\n\n<img src=\"%s\" alt=\"graph image\"/>", buf);
-
-    fclose(fout);
-
+    fprintf(fout, "\n\n<img src=\"%s\" alt=\"graph image\"/>\n\n", buf);
 
 
     listMakeGraph(list);

@@ -15,7 +15,12 @@ int main(int argc, const char* argv[])
     for (int i = 0; i < 5; ++i)
         handleErr(listPushBack(&list, (i + 1) * 10));
 
-    // handleErr(listDump(&list));
+    handleErr(listDump(&list));
+
+    for (int i = 6; i < 10; ++i)
+        handleErr(listPushBack(&list, (i + 1) * 10));
+
+    handleErr(listDump(&list));
 
     listDtor(&list);
     return 0;

@@ -12,6 +12,8 @@ struct List
     ListElem *data;
     int *next, *prev;
     int free;
+
+    FILE *fdump;
 };
 
 ErrEnum listCtor(List* list);

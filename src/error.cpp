@@ -4,7 +4,7 @@
 #include <error.h>
 #include <colors.h>
 
-const int n_errs = 10;
+const int n_errs = 13;
 ErrDescr err_arr[] = {{ERR_OK, "No error"}, 
 
 {ERR_NULL_LIST, "NULL list pointer"},
@@ -16,11 +16,10 @@ ErrDescr err_arr[] = {{ERR_OK, "No error"},
 {ERR_LIST_CYCLE, "Infinite cycle in list"},
 {ERR_FREE_CYCLE, "Infinite cycle in list of free elements"},
 {ERR_INVAL_PREV, "next and prev contradict"},
+{ERR_EMPTY_LIST, "Empty list"},
 
 {ERR_MEM, "Couldn't allocate memory"},
-{ERR_OPEN_FILE, "Couldn't open file"},
-
-{ERR_NULL_ARG, "NULL function argument"}};
+{ERR_OPEN_FILE, "Couldn't open file"}};
 
 void myAssertFn(int expr, const char* str_expr, const char* file, int line, const char* function)
 {
