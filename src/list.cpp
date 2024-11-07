@@ -33,7 +33,26 @@ void listDtor(List* list)
 
 ErrEnum listVerify(List* list)
 {
-    if (list == NULL) return ERR_NULL_LIST;
+    if (list       == NULL || list->data == NULL ||
+        list->next == NULL || list->prev == NULL)
+        return ERR_NULL_LIST;
+
+    int ind = 0;
+    for (int i = 0; i < max_elems; ++i)
+    {
+        if (list->prev[list->next[ind]] != ind) return ERR_INVAL_PREV;
+        ind = list->next[ind];
+        if (ind == 0) break;
+    }
+    if (ind != 0) return ERR_LIST_CYCLE;
+
+    ind = list->free;
+    for (int i = 0; i < max_elems; ++i)
+    {
+        ind = list->next[ind];
+        if (ind == 0) break;
+    }
+    if (ind != 0) return ERR_FREE_CYCLE;
 
     return ERR_OK;
 }
